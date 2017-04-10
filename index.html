@@ -5,7 +5,7 @@
 	<title>树形表格</title>
 </head>
 <body>
-	<script src="./dataset/testData.js"></script>
+	<script src="./testdata/allregion.js"></script>
 	<script src="./dataset/treeDataSet.js"></script>
 	<script>
 		var options = {data:out};
@@ -13,7 +13,8 @@
 		console.dir(treeDataSet.topTrunkNodeId);
 		console.dir(treeDataSet.trunkNodeId);
 		console.dir(treeDataSet.trunkNodePid);
-
+		treeDataSet.loadData({sort:['+lat'],page:{start:25,len:10}},function(res){console.log(res)})
 	</script>
+	<!-- package.json 配置script 进行测试-->
 </body>
 </html>
