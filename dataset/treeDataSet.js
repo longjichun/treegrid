@@ -1,4 +1,4 @@
-/**
+﻿/**
  * [TreeDataSet description]
  * @param  {object} options 形成树形数据结构的配置，以及数据源
  * @return {[type]}         [description]
@@ -29,6 +29,8 @@
 
 		//顶层节点
 		this.topTrunkNodeId = [];
+
+		this.renderRootData = [];
 
 		/*this.loadConfig = {
 			sort:[],
@@ -112,18 +114,26 @@
 
 	function doSort(arg){
 		var self = this;
-		if( !Array.isArray(arg) || !arg.length) {
-			self.sortCache = self.sortCache && self.sortCache.slice(0) || getChild.call(self, self.topTrunkNodeId.slice(0) );
+		var notSort = !Array.isArray(arg) || !arg.length;
+		var _temp = self.topTrunkNodeId.slice(0) ;
+		if(notSort) {
+			self.sortCache = _temp;	
 		} else {
-			self.sortCache = toSort(self.sortCache || self.topTrunkNodeId,arg);
+			self.sortCache = toSort(_temp,arg);
 		}
+
 	}
 	function doFilter(arg) {
 		var self = this;
-		if( JSON.stringify(arg) == "{}" || !arg ) {
-			self.filterCache = self.sortCache.slice(0);
+		var notFilter = JSON.stringify(arg) == "{}" || !arg ;
+		var _temp;
+
+		_temp = self.sortCache.slice(0);
+
+		if(notFilter) {
+			self.filterCache = _temp;
 		} else {
-			self.filterCache = toFilter(self.sortCache);
+			self.filterCache = toFilter(_temp,arg);
 		}
 	}
 	function doLimit(arg) {
@@ -133,13 +143,14 @@
 			_temp = self.filterCache.slice(0);
 		} else {
 			if(arg.start < 0 || arg.len < 0)  throw '分页参数错误';
+	
 			_temp = self.filterCache.slice(arg.start , arg.start+arg.len);
 		}
-		self.renderData = _temp;
+		self.renderRootData = _temp;
 	}
-	function doChilds(){
+	function toFilter(data,arg){
+		return data;
 	}
-
 
 	function toSort(data,sorts) {
 		data = data.slice(0);
@@ -177,19 +188,20 @@
 	}
 
 	function getChild(arr){
+		//获取子、孙节点
 		var self = this;
-		var _arr = [];
 		var returnFn = arguments.callee;
 		for(var i = 0,len = arr.length ;i<len;i++) {
-			var loopItem = data[i];
+			var loopItem = arr[i];
 			if( loopItem.expand ) {
 				var _id = "pids"+loopItem._id;
-				Array.prototype.splice.apply(data,[i,0].concat( self.trunkNodePid[_id] ));
-				len = data.length;
+				//将子节点加进arr中，并且重新赋值length
+				var childs = toFilter(toSort(self.trunkNodePid[_id],self.loadConfig.sort).slice(0));
+				Array.prototype.splice.apply(arr,[i+1,0].concat( childs ));
+				len = arr.length;
 			}
 		}
-		_arr = arr;
-		return _arr;
+		return arr;
 	}
 	/**
 	 * 通过 分页、排序、过滤操作，触发loadData函数
@@ -205,22 +217,52 @@
 						len:10
 					}
 	 */
+	function toloadData(name,val) {
+		var self = this;
+		if(name == 'sort') {
+			//排序操作需要重新过滤
+			doSort.call(self , val);
+			doFilter.call(self , self.loadConfig.page);
+		}
+		if(name == "filter") {
+			doFilter.call(self , val);
+		}
+
+		if(name == "page") {
+			doLimit.call(self , val);
+		} else {
+			doLimit.call(self , self.loadConfig.page);
+		}
+	}
 	$.prototype.loadData = function(config,cb){
 		if( typeof cb != 'function') throw 'loadData need 2 arguments(config,callback)';
 		
 		var self = this;
 
-		self.loadConfig = config;
-/*		if( self.firstLoadData ) {
+		/*if( self.firstLoadData ) {
 
 			self.firstLoadData = false;
 		}*/
+		var selfConfig = self.loadConfig;
+		if(self.firstLoadData) {
+			doSort.call(self ,config.sort);
 
-		doSort.call(self , config.sort);
+			doFilter.call(self ,config.filter);
 
-		doFilter.call(self , config.filter);
+			doLimit.call(self ,config.page)
+		} else {
+			// 根据改变了的参数，进行加载数据
+			for(var i in config) {
+				if(config.hasOwnProperty(i)) {
+					if( JSON.stringify(config[i]) != JSON.stringify(selfConfig[i]) ) {
+						toloadData.call(self,i,config[i]);
+					}
+				}
+			}
+		}
 
-		doLimit.call(self , config.page)
+		self.loadConfig = config;
+		self.renderData = getChild.call(self,self.renderRootData);
 
 		if(typeof cb != "function") {
 			return self.renderData;
