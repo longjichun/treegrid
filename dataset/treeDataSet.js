@@ -2,6 +2,8 @@
  * [TreeDataSet description]
  * @param  {object} options 形成树形数据结构的配置，以及数据源
  * @return {[type]}         [description]
+ *
+ * #初始数据可以没有expand 
  */
 
 
@@ -43,21 +45,24 @@
 			//存储排序、过滤后的topTrunkNodeId
 			topTrunkNodeId :null
 		};
-		this.sortCache = {
-
-		}
+		//this.sortCache = []
 		this.isAllExpand = false;
 		this.isAllClosed = false;
+		this.firstLoadData = true;
 		initData.call(this,this.data);
 
 	};
 
+	function addPath(arr) {
+
+	}
+
 	function initData(data){
-		var initData = data.concat([]);
+		var initData = data.slice(0);
 		var initLen = initData.length;
-		var trunkNodeId = {},
-			trunkNodePid = {},
-			topTrunkNodeId =[];
+		var trunkNodeId    = {},
+			trunkNodePid   = {},
+			topTrunkNodeId = [];
 		for( let i=0; i < initLen; i++) {
 
 			var ele = initData[i];
@@ -84,19 +89,19 @@
 				var _name2 = i.replace("pids","");
 				if( !trunkNodeId[_name2] ) {
 					//_name2 从parent 而来 如果trunkNodeId 没有id为name的对象，说明为顶层节点
-					for( var j =0,len = trunkNodePid[i].length;j<len;j++) {
+					/*for( var j =0,len = trunkNodePid[i].length;j<len;j++) {
 						// 路径
 						trunkNodePid[i].ids = trunkNodePid[i]._id;
-					}
+					}*/
 					_temp = _temp.concat(trunkNodePid[i]);
 				}
 			}
 		}
-		topTrunkNodeId = _temp;
-		this.trunkNodeId = trunkNodeId;
-		this.trunkNodePid = trunkNodePid;
-		this.topTrunkNodeId = topTrunkNodeId;
-		self.beforeLimitData = topTrunkNodeId;
+		topTrunkNodeId 		 = _temp;
+		this.trunkNodeId 	 = trunkNodeId;
+		this.trunkNodePid 	 = trunkNodePid;
+		this.topTrunkNodeId  = topTrunkNodeId;
+		this.beforeLimitData = topTrunkNodeId;
 	}
 	/**
 	 * [exChangeNode 展开与收缩节点的方法]
@@ -105,53 +110,156 @@
 	 * @return {[type]}     [description]
 	 */
 
-	function doSort(){
+	function doSort(arg){
 		var self = this;
-		self.sortCache = toSort(self.topTrunkNodeId,sorts);
-		self.filterCache = self.sortCache.slice(0);
+		if( !Array.isArray(arg) || !arg.length) {
+			self.sortCache = self.sortCache && self.sortCache.slice(0) || getChild.call(self, self.topTrunkNodeId.slice(0) );
+		} else {
+			self.sortCache = toSort(self.sortCache || self.topTrunkNodeId,arg);
+		}
 	}
-	function doFilter() {
+	function doFilter(arg) {
 		var self = this;
-		self.filterCache = toFilter(self.sortCache,conditions);
+		if( JSON.stringify(arg) == "{}" || !arg ) {
+			self.filterCache = self.sortCache.slice(0);
+		} else {
+			self.filterCache = toFilter(self.sortCache);
+		}
 	}
-	function doLimit() {
+	function doLimit(arg) {
 		var self = this;
-		self.limitData = toLimit(self.filterCache,limitConf);
+		var _temp = [];
+		if(arg == undefined) {
+			_temp = self.filterCache.slice(0);
+		} else {
+			if(arg.start < 0 || arg.len < 0)  throw '分页参数错误';
+			_temp = self.filterCache.slice(arg.start , arg.start+arg.len);
+		}
+		self.renderData = _temp;
 	}
-	function getChild(data){
-		var self = this;
-		return self.renderData;
+	function doChilds(){
 	}
-	function toSort(sorts) {
+
+
+	function toSort(data,sorts) {
+		data = data.slice(0);
 		var self = this;
 		if(Array.isArray(sorts)) {
 			var sortStrand = sorts.reverse();
 		} else {
 			console.error("排序指标为数组");
 		}
-		var tops = self.cacheData.topTrunkNodeId?self.cacheData.topTrunkNodeId:self.topTrunkNodeId; 
-		tops.sort(function(x,y){
-			return self.sortFn(x,y,sortStrand);
+		data.sort(function(x,y){
+			return sortFn.call(null,x,y,sortStrand)
 		});
-		//保存每次排序、过滤后的数据
-		self.cacheData.topTrunkNodeId = tops.slice(0);
-		self.sortCache.topTrunkNodeId = tops.slice(0);
-		var _tops = tops.slice(0);
-
-		var selfConfPage = self.loadConfig.page;
-		//有缓存就从缓存拿
-		var curTops = _tops.splice(selfConfPage.start,selfConfPage.len);
-		self.renderData = self.getExpandList(curTops,false);
+		return data;
 	}
-	$.prototype.loadData = function(config,cb){
+
+
+	 /**
+	 * 排序函数
+	 * @param {array} sortStrand 排序字段
+	 */
+	function sortFn(x,y,sortStrand) {
+		var poi = 0;
+		for( var i=0,len = sortStrand.length;i<len;i++) {
+			var cure = sortStrand[i];
+			if(!cure) return 0;
+			if(cure.slice(0,1 == '-')) {
+				poi = y[cure.slice(1)]-x[cure.slice(1)];
+			} else if(cure.slice(0,1)=="+") {
+				poi = x[cure.slice(1)] -y[cure.slice(1)]
+			} else {
+				poi = x[cure] -y[cure];
+			};
+		}
+		return poi;
+	}
+
+	function getChild(arr){
 		var self = this;
-		doSort().doFilter().doLimit();
+		var _arr = [];
+		var returnFn = arguments.callee;
+		for(var i = 0,len = arr.length ;i<len;i++) {
+			var loopItem = data[i];
+			if( loopItem.expand ) {
+				var _id = "pids"+loopItem._id;
+				Array.prototype.splice.apply(data,[i,0].concat( self.trunkNodePid[_id] ));
+				len = data.length;
+			}
+		}
+		_arr = arr;
+		return _arr;
+	}
+	/**
+	 * 通过 分页、排序、过滤操作，触发loadData函数
+	 * @param  {[type]}   config [三个操作的配置]
+	 * @param  {Function} cb     [回调函数，参数为处理结果]
+	 * @return {[type]}          [description]
+	 * 每筛选或排序依次，都保存一份数据，是最后一次筛选或排序的数据
+	*  example config = {
+					sort:[],
+					filter:,
+					page:{
+						start:0,
+						len:10
+					}
+	 */
+	$.prototype.loadData = function(config,cb){
+		if( typeof cb != 'function') throw 'loadData need 2 arguments(config,callback)';
+		
+		var self = this;
+
+		self.loadConfig = config;
+/*		if( self.firstLoadData ) {
+
+			self.firstLoadData = false;
+		}*/
+
+		doSort.call(self , config.sort);
+
+		doFilter.call(self , config.filter);
+
+		doLimit.call(self , config.page)
+
 		if(typeof cb != "function") {
 			return self.renderData;
 		} else {
 			cb(self.renderData);
 		}
-	}
+	};
+	/**
+	 * 展开/收缩节点的方法
+	 * @param  {string}   id  被点击节点的_id
+	 * @param  {number}   ind 被点击节点的位置
+	 * @param  {function} cb  回调函数，参数为处理结果
+	 * @return {[type]}     [description]
+	 */
+	$.prototype.exChangeNode = function(id,ind,cb){
+		var self = this;
+		var current = self.trunkNodeId(id);
+		if(current.expand) {
+			//折叠操作
+			//将isAllExpand 转为false
+			self.isAllExpand = false;
+			current.expand = !current.expand;
+			var expandedIds = [];
+			var _id = '';
+			var outArr = self.renderData.filter(function(item){
+				// 该节点的父id不是点击的id,并且不是其子孙节点
+				if(item.level == current.level) {
+					_id = item._id;
+				}
+				//层级比id的大 并且父id==id
+				if(item.level >current.level && _id==id) {
+					return false;
+				} else {
+					return true;
+				}
+			});
+			self.renderData = outArr;
+		}
+	};
 
 	if( typeof exports !== 'undefined' && typeof module !== 'undefined' && module.exports){
 		exports.$ = module.exports = $;

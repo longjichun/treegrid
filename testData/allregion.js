@@ -6,6 +6,7 @@ var  out = [{
         "parent": "1",
         "lat": 39.9,
         "long": 116.4,
+        "expand":true,
         "Ename": "Beijing Shi"
     }, {
         "_id": "3",
@@ -25024,6 +25025,12 @@ var  out = [{
         "long": 106.77,
         "Ename": "Huaying Shi"
     }];
- if(module && module.exports && exports) {
-    exports.out = out;
-}
+    try{
+        if(module && module.exports && exports) {
+            exports.out = out;
+        }
+    } catch(error){
+        if(module && module.exports && exports) {
+            exports.out = out;
+        }
+    }
