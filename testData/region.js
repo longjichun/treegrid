@@ -6,6 +6,7 @@ var  out = [
         "parent": "1",
         "lat": 39.9,
         "long": 116.4,
+        "expand":false,
         "Ename": "Beijing Shi"
     }, {
         "_id": "3",
@@ -21,9 +22,20 @@ var  out = [
         "name": "东城区",
         "parent": "2",
         "lat": 39.93,
+        "expand":false,
         "long": 116.42,
         "Ename": "Dongcheng Qu"
-    }, {
+    },
+    {
+        "_id": "3789",
+        "code": "110101",
+        "name": "东城区右边",
+        "parent": "378",
+        "lat": 39.93,
+        "long": 116.42,
+        "Ename": "Dongcheng Qu"
+    },
+    {
         "_id": "379",
         "code": "110102",
         "name": "西城区",

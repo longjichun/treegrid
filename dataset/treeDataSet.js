@@ -72,8 +72,8 @@
 
 			if( _id === undefined) throw "原始数据缺少唯一标识_id或者id";
 			if( typeof _id !== "string" && typeof _id !== "number" ) throw "原始数据_id格式不正确";
-			
 			trunkNodeId[_id] = ele;
+			//trunkNodeId[_id].ids = ele._id;
 
 
 			var parent = ele.parent;
@@ -158,7 +158,8 @@
 		if(Array.isArray(sorts)) {
 			var sortStrand = sorts.reverse();
 		} else {
-			console.error("排序指标为数组");
+			console.error("排序指标应当为数组，返回原数组");
+			return data;
 		}
 		data.sort(function(x,y){
 			return sortFn.call(null,x,y,sortStrand)
@@ -188,11 +189,22 @@
 	}
 
 	function getChild(arr){
-		//获取子、孙节点
+		//获取子、孙节点,并且完成排序和过滤
 		var self = this;
-		var returnFn = arguments.callee;
 		for(var i = 0,len = arr.length ;i<len;i++) {
 			var loopItem = arr[i];
+			if(loopItem.ids==undefined) {
+				//如果还没有ids
+				var par = self.trunkNodeId[loopItem.parent];
+				var ids = ''
+				if(par) {
+					ids = (par.ids||par.id)+'-'+loopItem._id
+					loopItem.ids = ids;
+				} else {
+					loopItem.ids = loopItem._id;
+				}
+				loopItem.level = ids.split("-").length-1;
+			}
 			if( loopItem.expand ) {
 				var _id = "pids"+loopItem._id;
 				//将子节点加进arr中，并且重新赋值length
@@ -278,29 +290,42 @@
 	 * @return {[type]}     [description]
 	 */
 	$.prototype.exChangeNode = function(id,ind,cb){
-		var self = this;
-		var current = self.trunkNodeId(id);
+		var self 	= this;
+		var current = self.trunkNodeId[id];
+		var _temp 	= self.trunkNodePid["pids"+id];
 		if(current.expand) {
 			//折叠操作
 			//将isAllExpand 转为false
 			self.isAllExpand = false;
-			current.expand = !current.expand;
-			var expandedIds = [];
+			var expandedIds  = [];
+			var curIds 		 = current.ids;
+
+			/*以下方法也是可行的
 			var _id = '';
-			var outArr = self.renderData.filter(function(item){
-				// 该节点的父id不是点击的id,并且不是其子孙节点
+			self.renderData = self.renderData.filter(function(item){
 				if(item.level == current.level) {
 					_id = item._id;
 				}
-				//层级比id的大 并且父id==id
+				console.log(_id,id)
 				if(item.level >current.level && _id==id) {
 					return false;
 				} else {
 					return true;
 				}
+			});*/
+			self.renderData = self.renderData.filter(function(item){
+				return (curIds == item.ids) || !~item.ids.indexOf(curIds);
 			});
-			self.renderData = outArr;
+		} else {
+			//展开操作
+			self.isAllClosed = false;
+			_temp = getChild.call(self , _temp);
+			for(var j = 0,len = _temp.length;j < len;j++){
+				self.renderData.splice(ind+1+j,0,_temp[j]);
+			}
 		}
+		current.expand = !current.expand;
+		cb(_temp);
 	};
 
 	if( typeof exports !== 'undefined' && typeof module !== 'undefined' && module.exports){
