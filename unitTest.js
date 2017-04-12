@@ -32,23 +32,23 @@ describe("new TreeDataSet all data",function(){
 	it("to load all data every is right",function(){
 		/*load 全部数据*/
 		dataset.loadData({},function(res){
-			res.length.should.equal(dataLen);
+			res.length.should.aboveOrEqual(dataLen);
 		});
 
 		//load 部分数据
 		dataset.loadData({page:{start:0,len:20}},function(res){
-			res.length.should.equal(20);
+			res.length.should.aboveOrEqual(20);
 		});
 
 		//模拟排序
 		dataset.loadData({sort:['+lat'],page:{start:25,len:10}},function(res){
-			res[0].lat.should.belowOrEqual(res[1].lat);
+			res[0].lat.should.belowOrEqual(res.pop().lat);
 		})
 	})
 });
 
 describe("little data",function(){
-	const miniData =  require("./testdata/region").out;
+	let miniData =  require("./testdata/region").out.slice(0);
 	var len =  miniData.length;
 
 	var options = {
@@ -62,15 +62,36 @@ describe("little data",function(){
 		});
 	});
 
-	it('fold beijing should be ok',function(){
+});
+describe("将北京和东城区的expand设为true",function(){
+	let _miniData =  require("./testdata/region").out.slice(0);
+	let miniData2 = JSON.parse(JSON.stringify(_miniData));
+	var len =  miniData2.length;
+	let options = {
+		data:miniData2
+	};
 
+	miniData2[0].expand = true;
+	miniData2[2].expand = true;
+	var dataset = new TreeDataSet(options);
+	it("将纬度排序之后，第八项为东城区ids:2-378，第九项为其虚拟辖区level:2",function(){
+		dataset.loadData({sort:['+lat'],page:{start:0,len:2}},function(res){
+			res[9].ids.should.equal('2-378');
+			res[10].ids.should.equal('2-378-3789');
+			res[10].level.should.equal(2);
+		})
 	});
-
-	it('addPath should be ok',function(){
-		var pathed = addPath(miniData);
-		pathed.length.should.be(len);
-
-	});
+	it("将北京收缩后，总长度为2",function(){
+		dataset.exChangeNode(2,1,function(res){
+			dataset.renderData.length.should.equal(2)
+		});
+	})
+	it("将天津展开后，其子节点为16，总共节点为18",function(){
+		dataset.exChangeNode(3,0,function(res){
+			res.length.should.equal(16);
+			dataset.renderData.length.should.equal(18);
+		});
+	})
 })
 describe('变量声明与函数体声明',function(){
 /*	var a;
