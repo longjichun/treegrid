@@ -300,22 +300,27 @@
 			var expandedIds  = [];
 			var curIds 		 = current.ids;
 
-			/*以下方法也是可行的
+			//以下方法也是可行的
 			var _id = '';
 			self.renderData = self.renderData.filter(function(item){
 				if(item.level == current.level) {
 					_id = item._id;
 				}
-				console.log(_id,id)
 				if(item.level >current.level && _id==id) {
 					return false;
 				} else {
 					return true;
 				}
-			});*/
-			self.renderData = self.renderData.filter(function(item){
-				return (curIds == item.ids) || !~item.ids.indexOf(curIds);
 			});
+			/*var _data = self.renderData.slice(0);
+			self.renderData = [];
+			_data.forEach(function(item){
+				// 									bug   item.ids:32  curIds 2
+				var bol = (curIds == item.ids) || !~item.ids.indexOf(curIds);
+				if(bol){
+					self.renderData.push(item);
+				}
+			});*/
 		} else {
 			//展开操作
 			self.isAllClosed = false;
@@ -325,9 +330,16 @@
 			}
 		}
 		current.expand = !current.expand;
-		cb(_temp);
+		if(cb) cb(_temp);
 	};
-
+	$.prototype.allExpand = function(){
+		var self = this;
+		self.isAllExpand = true;
+		for( var i=0;i<self.topTrunkNodeId.length;i++) {
+			var loopItem = self.trunkNodeId[self.topTrunkNodeId[i]._id].expand = true;
+		}
+		
+	}
 	if( typeof exports !== 'undefined' && typeof module !== 'undefined' && module.exports){
 		exports.$ = module.exports = $;
 	} else {

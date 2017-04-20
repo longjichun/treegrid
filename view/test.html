@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+
+	<script src="../dataset/treeDataSet-es6.js"></script>
+	<script src="../out.js"></script>
+	<script>
+
+		var dataset = new TreeDataSet({
+			loadConfig:{
+				sort:[],
+				filter:{},
+				page:{
+					start:0,
+					len:40
+				}
+			},
+			data:out
+		});
+		dataset.loadData().then(function(res){
+				console.log(res)
+			})
+	</script>
+</body>
+</html>

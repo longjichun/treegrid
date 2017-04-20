@@ -3,17 +3,74 @@
 <head>
 	<meta charset="UTF-8">
 	<title>树形表格</title>
+	<style>
+	table{
+		border-spacing: 0px;
+	}
+		tr td,th{
+			height: 30px;
+			padding: 0;
+			border-bottom: 1px solid #ccc;
+			border-right: 1px solid #ccc;
+		}
+	</style>
 </head>
 <body>
+	<div>
+		<table>
+			<thead>
+				<tr>
+					<th width="60">序号</th>
+					<th width="60">_ID</th>
+					<th width="120">邮编</th>
+					<th width="160">名称</th>
+					<th width="100">纬度</th>
+					<th width="100">经度</th>
+					<th width="160">英文名</th>
+				</tr>
+			</thead>
+			<tbody  id="tab">
+				
+			</tbody>
+		</table>
+	</div>
+	<script id="tmp" type="text/html">
+		    <%for(var i=0;i<list.length;i++){%>
+                <tr>
+                	<td><%=i%></td>
+                	<td><%=list[i]._id%></td>
+                	<td><%=list[i].code%></td>
+                	<td><%=list[i].name%></td>
+                	<td><%=list[i].lat%></td>
+                	<td><%=list[i].long%></td>
+                	<td><%=list[i].Ename%></td>
+                </tr>
+            <%}%>
+	</script>
 	<script src="./testdata/allregion.js"></script>
 	<script src="./dataset/treeDataSet.js"></script>
+	<script src="./dataset/baiduTemplate.js"></script>
 	<script>
 		var options = {data:out};
 		var treeDataSet = new TreeDataSet(options);
-		console.dir(treeDataSet.topTrunkNodeId);
-		console.dir(treeDataSet.trunkNodeId);
-		console.dir(treeDataSet.trunkNodePid);
-		treeDataSet.loadData({sort:['+lat'],page:{start:25,len:10}},function(res){console.log(res)})
+
+		var bt=baidu.template;
+		var data={
+		    "list":[]
+		};
+		function render(d){
+			data.list = d;
+			var html=bt('tmp',data);
+			tab.innerHTML = html;			
+		}
+		treeDataSet.loadData({},function(res){
+			render(res);
+		});
+		treeDataSet.exChangeNode(2,0);
+		render(treeDataSet.renderData)
+
+		/*loadData的res和treeDataSet.renderData指向同一个对象*/
+		/*exchangeNode的res指向展开或折叠了的结果*/
 	</script>
 	<!-- package.json 配置script 进行测试-->
 </body>
