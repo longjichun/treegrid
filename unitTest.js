@@ -1,3 +1,4 @@
+var fs = require("fs");
 const should = require("should");
 const TreeDataSet = require("./dataset/treeDataSet");
 describe("new TreeDataSet all data",function(){
@@ -93,21 +94,42 @@ describe("将北京和东城区的expand设为true",function(){
 		});
 	})
 })
-describe('变量声明与函数体声明',function(){
-/*	var a;
-	console.log(a)*/
-	
-	/*console.log(a)*/
-})
+describe("全部展开、全部收缩操作",function(){
+	let _miniData =  require("./testdata/region").out.slice(0);
+	let miniData2 = JSON.parse(JSON.stringify(_miniData));
+	var len =  miniData2.length;
+	let options = {
+		data:miniData2
+	};
 
-function addPath(arr) {
-	var _arr = [];
+	miniData2[0].expand = true;
+	miniData2[2].expand = true;
+	var dataset = new TreeDataSet(options);
+	it("全部收缩之后renderData长度为len,长度为2",function(){
+		dataset.loadData({},function(res){
+			dataset.allExpand(function(res){
+				res.length.should.equal(len);
+			});
+			dataset.allClosed(function(res){
+				res.length.should.equal(2);
+			});
+		})
+	});
 
-	run(arr);
-	function run(){
-		var returnFn = arguments.callee;
-
-	}
-
-	return _arr;
-}
+	it("进行一系列折叠展开后，对lat字段升序又降序再升序之后能返回原来的数据",function(){
+		var initStr = initStr2 = '';
+		var upDataPoi2 = downDataPoi2 = null;
+		dataset.loadData({sort:['+lat']},function(res){
+			initStr = JSON.stringify(res);
+			upDataPoi2 = JSON.stringify(res[0]);
+		});
+		dataset.loadData({sort:['-lat']},function(res){
+			downDataPoi2 = JSON.stringify(res[res.length-1]);
+		});
+		dataset.loadData({sort:['+lat']},function(res){
+			initStr2 = JSON.stringify(res);
+		});
+		initStr.should.equal(initStr2);
+		upDataPoi2.should.not.equal(downDataPoi2);
+	});
+});

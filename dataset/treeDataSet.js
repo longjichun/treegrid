@@ -5,8 +5,6 @@
  *
  * #初始数据可以没有expand 
  */
-
-
 (function(){
 	var root = this;
 	var TreeDataSet;
@@ -158,7 +156,6 @@
 		if(Array.isArray(sorts)) {
 			var sortStrand = sorts.reverse();
 		} else {
-			console.error("排序指标应当为数组，返回原数组");
 			return data;
 		}
 		data.sort(function(x,y){
@@ -188,8 +185,9 @@
 		return poi;
 	}
 
-	function getChild(arr){
+	function getChild(_arr){
 		//获取子、孙节点,并且完成排序和过滤
+		var arr  = _arr.slice(0);
 		var self = this;
 		for(var i = 0,len = arr.length ;i<len;i++) {
 			var loopItem = arr[i];
@@ -205,12 +203,15 @@
 				}
 				loopItem.level = ids.split("-").length-1;
 			}
-			if( loopItem.expand ) {
+			if( loopItem.expand || self.isAllExpand ) {
+				loopItem.expand = true;
 				var _id = "pids"+loopItem._id;
 				//将子节点加进arr中，并且重新赋值length
-				var childs = toFilter(toSort(self.trunkNodePid[_id],self.loadConfig.sort).slice(0));
-				Array.prototype.splice.apply(arr,[i+1,0].concat( childs ));
-				len = arr.length;
+				if(self.trunkNodePid[_id]) {
+					var childs = toFilter(toSort(self.trunkNodePid[_id],self.loadConfig.sort).slice(0));
+					Array.prototype.splice.apply(arr,[i+1,0].concat( childs ));
+					len = arr.length;
+				}
 			}
 		}
 		return arr;
@@ -332,17 +333,23 @@
 		current.expand = !current.expand;
 		if(cb) cb(_temp);
 	};
-	$.prototype.allExpand = function(){
+	$.prototype.allExpand = function(cb){
 		var self = this;
 		self.isAllExpand = true;
-		for( var i=0;i<self.topTrunkNodeId.length;i++) {
-			var loopItem = self.trunkNodeId[self.topTrunkNodeId[i]._id].expand = true;
-		}
-		
+		self.renderData = getChild.call(self,self.renderRootData);
+		if(cb) cb(self.renderData);
+	};
+	$.prototype.allClosed = function(cb){
+		var self 		 = this;
+		self.isAllExpand = false;
+		self.renderData  = self.topTrunkNodeId;
+		if(cb) cb(self.renderData);
+	};
+	$.prototype.getCount = function(){
 	}
 	if( typeof exports !== 'undefined' && typeof module !== 'undefined' && module.exports){
 		exports.$ = module.exports = $;
 	} else {
 		root.TreeDataSet = $;
 	}
-}).call(this)
+}).call(this);

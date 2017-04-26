@@ -13,6 +13,12 @@
 			border-bottom: 1px solid #ccc;
 			border-right: 1px solid #ccc;
 		}
+		.level1 {
+			text-indent: 20px;
+		}
+		.level2{
+			text-indent: 40px;
+		}
 	</style>
 </head>
 <body>
@@ -40,7 +46,7 @@
                 	<td><%=i%></td>
                 	<td><%=list[i]._id%></td>
                 	<td><%=list[i].code%></td>
-                	<td><%=list[i].name%></td>
+                	<td class=<%="level"+list[i].level%>><%=list[i].name%></td>
                 	<td><%=list[i].lat%></td>
                 	<td><%=list[i].long%></td>
                 	<td><%=list[i].Ename%></td>
@@ -69,6 +75,24 @@
 		treeDataSet.exChangeNode(2,0);
 		render(treeDataSet.renderData)
 
+		console.log(treeDataSet.renderData[0])
+
+		setTimeout(function(){
+			treeDataSet.allExpand();
+			render(treeDataSet.renderData);
+		},1000)
+		setTimeout(function(){
+			treeDataSet.allClosed();
+			render(treeDataSet.renderData);
+		},2000)
+		setTimeout(function(){
+			treeDataSet.allExpand();
+			render(treeDataSet.renderData);
+		},3000)
+		setTimeout(function(){
+			treeDataSet.exChangeNode(2,0);
+			render(treeDataSet.renderData)
+		},4000)
 		/*loadData的res和treeDataSet.renderData指向同一个对象*/
 		/*exchangeNode的res指向展开或折叠了的结果*/
 	</script>

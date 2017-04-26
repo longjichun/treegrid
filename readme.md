@@ -14,3 +14,7 @@
 
 	* 将新增的子节点进行排序 
 	* 分页的时候需要把子节点添加上
+
+trunkNodeId 两个数据的成员是绑定在一起的 renderData
+
+	var arr = [{x:3}]  var brr = arr; brr[0].x = 43;==>?
