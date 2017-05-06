@@ -1,0 +1,23 @@
+{
+  "name": "treegrid",
+  "version": "1.0.0",
+  "description": "树形表格",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "mocha unitTest.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/longjichun/treegrid.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/longjichun/treegrid/issues"
+  },
+  "dependencies":{
+    "mocha":"3.10.10",
+    "should":"11.2.1"
+  },
+  "homepage": "https://github.com/longjichun/treegrid#readme"
+}

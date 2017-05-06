@@ -6,6 +6,7 @@
  * #初始数据可以没有expand 
  */
 (function(){
+	"use strict"
 	var root = this;
 	var TreeDataSet;
 	var $ = TreeDataSet = function(options) {
@@ -53,9 +54,6 @@
 
 	};
 
-	function addPath(arr) {
-
-	}
 
 	function initData(data){
 		var initData = data.slice(0);
@@ -72,7 +70,6 @@
 			if( typeof _id !== "string" && typeof _id !== "number" ) throw "原始数据_id格式不正确";
 			trunkNodeId[_id] = ele;
 			//trunkNodeId[_id].ids = ele._id;
-
 
 			var parent = ele.parent;
 			if( parent === undefined ) parent = '';
@@ -301,7 +298,6 @@
 			var expandedIds  = [];
 			var curIds 		 = current.ids;
 
-			//以下方法也是可行的
 			var _id = '';
 			self.renderData = self.renderData.filter(function(item){
 				if(item.level == current.level) {
@@ -313,15 +309,6 @@
 					return true;
 				}
 			});
-			/*var _data = self.renderData.slice(0);
-			self.renderData = [];
-			_data.forEach(function(item){
-				// 									bug   item.ids:32  curIds 2
-				var bol = (curIds == item.ids) || !~item.ids.indexOf(curIds);
-				if(bol){
-					self.renderData.push(item);
-				}
-			});*/
 		} else {
 			//展开操作
 			self.isAllClosed = false;
@@ -347,9 +334,10 @@
 	};
 	$.prototype.getCount = function(){
 	}
-	if( typeof exports !== 'undefined' && typeof module !== 'undefined' && module.exports){
-		exports.$ = module.exports = $;
+	if(module && module.exports) {
+		module.exports = $;
 	} else {
 		root.TreeDataSet = $;
 	}
+
 }).call(this);

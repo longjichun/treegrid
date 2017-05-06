@@ -5,7 +5,7 @@ describe("new TreeDataSet all data",function(){
 	const data = require("./testdata/allregion").out;
 	var options = {
 		data:data
-	}
+	};
 	var dataset = new TreeDataSet(options);
 
 	it("new Class",function(){
